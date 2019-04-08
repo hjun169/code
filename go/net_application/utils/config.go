@@ -39,17 +39,16 @@ func LoadConfig(filename string) error {
 	reader := bufio.NewReader(fh)
 	for {
 		line, err := reader.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				break;
-			}
-			
+		if err != nil && err != io.EOF {
 			return err
 		}
 		
 		arrs := strings.Split(line, "#")
 		str := strings.TrimSpace(arrs[0])//去除空格,包括\r
 		if str == "" {//为#注释行
+			if err == io.EOF {
+				break;
+			}
 			continue
 		}
 		
@@ -62,6 +61,10 @@ func LoadConfig(filename string) error {
 		vals[0] = strings.TrimSpace(vals[0]);
 		vals[1] = strings.TrimSpace(vals[1]);
 		configs[vals[0]] = vals[1];
+		
+		if err == io.EOF {
+			break;
+		}
 	}
 	
 	if len(configs) < 1 {
