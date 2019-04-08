@@ -21,6 +21,7 @@ func main() {
 	listener, err := net.ListenTCP("tcp", tcpAddr)
 	utils.OutputError(err)
 	defer listener.Close()
+	
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -44,11 +45,8 @@ func handleConn(conn net.Conn) {
 		buffer := make([]byte, 2048)
 		n, err := conn.Read(buffer)		
 		if err != nil {
-			encode, err_enocde := utils.JsonEncode(500, "接受到的第" + j + "条消息:读取消息出现错误", "")
-			if err_enocde == nil {
-				conn.Write(encode)
-			}
-			continue
+			utils.LogMessage("error", err.Error())
+			break
 		}
 		
 		hb <- 1 //维持心跳
@@ -95,7 +93,10 @@ func handleConn(conn net.Conn) {
 		encode, err_enocde := utils.JsonEncode(code, msg, data)
 		if err_enocde == nil {
 			conn.Write(encode)
+		} else {
+			fmt.Println(err_enocde)
 		}
+		
 	}
 	
 }
@@ -104,7 +105,7 @@ func handleConn(conn net.Conn) {
 func heaterbeat(hb chan int, conn net.Conn) {
 	select {
 		case <-hb :
-				
+			return
 		case <-time.After(time.Second * 30): //30秒无接受消息则停止
 			conn.Close()		
 	}

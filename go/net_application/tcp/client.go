@@ -26,7 +26,7 @@ func main() {
 	utils.OutputError(err)
 	defer conn.Close()
 	
-	fmt.Println("请按行输入字符,quit退出或30秒无输入自动退出:")
+	fmt.Println("请按行输入字符,quit退出或30秒无输入自动断开连接:")
 	fh := bufio.NewReader(os.Stdin)
 	for{
 		line, err := fh.ReadString('\n')
@@ -54,7 +54,6 @@ func main() {
 		encode, err_encode := utils.JsonEncode(200, "", str)
 		if err_encode == nil {
 			_, err_write := conn.Write(encode)
-			
 			if err_write == nil {
 				buffer := make([]byte, 2048)
 				n, err_read := conn.Read(buffer)		
@@ -63,12 +62,17 @@ func main() {
 					if err_decode == nil {
 						fmt.Println("server reply:", output)
 					}
-				} else if err_write == io.EOF {
+				} else if err_read == io.EOF {
+					fmt.Println("server断开")
 					break
+				} else {
+					fmt.Println("server reply:", err_read)
+					break	
 				}
 				
 			} else {
-				fmt.Println(err_write)
+				fmt.Println("server reply:", err_write)
+				break
 			}			
 		}
 	}
